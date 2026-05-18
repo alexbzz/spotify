@@ -52,6 +52,12 @@ public class MainController {
         filteredList.setPredicate(p -> true);
     }
 
+    public void addTrack(Track track) {
+        libraryService.getTracks().add(track);
+        trackList.add(track);
+        playbackQueue.setQueue(libraryService.getTracks());
+    }
+
     public void bindView(MainView view) {
         this.mainView = view;
         PlayerBar bar = view.getPlayerBar();

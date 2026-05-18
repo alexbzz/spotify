@@ -5,6 +5,7 @@ import com.spotify.model.Playlist;
 import com.spotify.model.Track;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -73,6 +74,29 @@ public class MainView {
         trackListView.setItems(controller.getFilteredList());
         trackListView.setCellFactory(lv -> new TrackCell());
         trackListView.setStyle("-fx-background-color: #121212; -fx-border-color: transparent;");
+
+        trackListView.setOnDragOver(event -> {
+            if (event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY);
+            }
+            event.consume();
+        });
+
+        trackListView.setOnDragDropped(event -> {
+            javafx.scene.input.Dragboard db = event.getDragboard();
+            if (db.hasFiles()) {
+                db.getFiles().forEach(file -> {
+                    String name = file.getName().toLowerCase();
+                    if (name.endsWith(".mp3") || name.endsWith(".wav")) {
+                        String title = file.getName().replaceAll("\\.(mp3|wav)$", "");
+                        Track track = new Track(title, "Inconnu", 0, file.getAbsolutePath());
+                        controller.addTrack(track);
+                    }
+                });
+                event.setDropCompleted(true);
+            }
+            event.consume();
+        });
 
         VBox centerBox = new VBox(8, tracklistTitle, searchField, trackListView);
         centerBox.setPadding(new Insets(16));
