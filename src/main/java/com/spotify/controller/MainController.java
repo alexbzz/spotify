@@ -8,7 +8,9 @@ import com.spotify.ui.MainView;
 import com.spotify.ui.PlayerBar;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 
 public class MainController {
 
@@ -16,10 +18,11 @@ public class MainController {
     private final AudioPlayerService audioPlayerService;
     private final PlaybackQueue playbackQueue;
     private final ObservableList<Track> trackList;
-    private boolean isRepeat = false;
+    private FilteredList<Track> filteredList;
 
     private MainView mainView;
     private boolean isPlaying = false;
+    private boolean isRepeat = false;
 
     public MainController() {
         this.libraryService = new LibraryService();
@@ -34,19 +37,42 @@ public class MainController {
         libraryService.loadFromDirectory(musicPath);
         trackList.setAll(libraryService.getTracks());
         playbackQueue.setQueue(libraryService.getTracks());
+        filteredList = new FilteredList<>(trackList, p -> true);
     }
 
     public void bindView(MainView view) {
         this.mainView = view;
         PlayerBar bar = view.getPlayerBar();
 
-        audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) -> {
-            bar.progressSlider.setMax(newVal.doubleValue());
+        // --- Barre de progression ---
+        audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) ->
+                bar.progressSlider.setMax(newVal.doubleValue())
+        );
+
+        audioPlayerService.currentTimeSeconds.addListener((obs, oldVal, newVal) -> {
+            if (!bar.progressSlider.isValueChanging()) {
+                bar.progressSlider.setValue(newVal.doubleValue());
+            }
+            bar.lblCurrentTime.setText(formatTime(newVal.doubleValue()));
         });
+
+        audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) ->
+                bar.lblTotalTime.setText(formatTime(newVal.doubleValue()))
+        );
+
+        // --- Info morceau ---
+        bar.lblTrackInfo.textProperty().bind(audioPlayerService.trackInfoProperty);
+
+        // --- Boutons ---
+        bar.btnPlayPause.setOnAction(e -> togglePlayPause());
+        bar.btnNext.setOnAction(e -> playNext());
+        bar.btnPrevious.setOnAction(e -> playPrevious());
+
         bar.btnShuffle.setOnAction(e -> {
             playbackQueue.shuffle();
             bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
         });
+
         bar.btnRepeat.setOnAction(e -> {
             isRepeat = !isRepeat;
             if (isRepeat) {
@@ -56,26 +82,17 @@ public class MainController {
             }
         });
 
-        audioPlayerService.currentTimeSeconds.addListener((obs, oldVal, newVal) -> {
-            if (!bar.progressSlider.isValueChanging()) {
-                bar.progressSlider.setValue(newVal.doubleValue());
-            }
-            bar.lblCurrentTime.setText(formatTime(newVal.doubleValue()));
-        });
-
-        audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) -> {
-            bar.lblTotalTime.setText(formatTime(newVal.doubleValue()));
-        });
-        bar.lblTrackInfo.textProperty().bind(audioPlayerService.trackInfoProperty);
-        bar.btnPlayPause.setOnAction(e -> togglePlayPause());
-        bar.btnNext.setOnAction(e -> playNext());
-        bar.btnPrevious.setOnAction(e -> playPrevious());
+        // --- Volume ---
         bar.volumeSlider.valueProperty().addListener((obs, oldVal, newVal) ->
                 audioPlayerService.setVolume(newVal.doubleValue())
         );
+
+        // --- Seek ---
         bar.progressSlider.setOnMouseReleased(e ->
                 audioPlayerService.seekTo(bar.progressSlider.getValue())
         );
+
+        // --- Double clic sur un morceau ---
         ListView<Track> listView = view.getTrackListView();
         listView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
@@ -88,7 +105,19 @@ public class MainController {
             }
         });
 
+        // --- Fin de morceau ---
         audioPlayerService.setOnEndOfMedia(this::playNext);
+
+        // --- Recherche ---
+        TextField searchField = view.getSearchField();
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredList.setPredicate(track -> {
+                if (newVal == null || newVal.isEmpty()) return true;
+                String query = newVal.toLowerCase();
+                return track.getTitle().toLowerCase().contains(query)
+                        || track.getArtist().toLowerCase().contains(query);
+            });
+        });
     }
 
     private void playTrack(Track track) {
@@ -99,7 +128,6 @@ public class MainController {
 
     private void togglePlayPause() {
         if (playbackQueue.current() == null) return;
-
         if (isPlaying) {
             audioPlayerService.pause();
             isPlaying = false;
@@ -133,12 +161,5 @@ public class MainController {
     }
 
     public ObservableList<Track> getTrackList() { return trackList; }
-
-    public boolean isRepeat() {
-        return isRepeat;
-    }
-
-    public void setRepeat(boolean repeat) {
-        isRepeat = repeat;
-    }
+    public FilteredList<Track> getFilteredList() { return filteredList; }
 }
