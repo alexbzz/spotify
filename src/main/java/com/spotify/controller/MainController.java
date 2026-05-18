@@ -16,6 +16,7 @@ public class MainController {
     private final AudioPlayerService audioPlayerService;
     private final PlaybackQueue playbackQueue;
     private final ObservableList<Track> trackList;
+    private boolean isRepeat = false;
 
     private MainView mainView;
     private boolean isPlaying = false;
@@ -45,6 +46,14 @@ public class MainController {
         bar.btnShuffle.setOnAction(e -> {
             playbackQueue.shuffle();
             bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
+        });
+        bar.btnRepeat.setOnAction(e -> {
+            isRepeat = !isRepeat;
+            if (isRepeat) {
+                bar.btnRepeat.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
+            } else {
+                bar.btnRepeat.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;");
+            }
         });
 
         audioPlayerService.currentTimeSeconds.addListener((obs, oldVal, newVal) -> {
@@ -103,8 +112,13 @@ public class MainController {
     }
 
     private void playNext() {
-        Track next = playbackQueue.next();
-        if (next != null) playTrack(next);
+        if (isRepeat) {
+            Track current = playbackQueue.current();
+            if (current != null) playTrack(current);
+        } else {
+            Track next = playbackQueue.next();
+            if (next != null) playTrack(next);
+        }
     }
 
     private void playPrevious() {
@@ -119,4 +133,12 @@ public class MainController {
     }
 
     public ObservableList<Track> getTrackList() { return trackList; }
+
+    public boolean isRepeat() {
+        return isRepeat;
+    }
+
+    public void setRepeat(boolean repeat) {
+        isRepeat = repeat;
+    }
 }

@@ -15,6 +15,7 @@ public class PlayerBar extends HBox {
     public final Button btnPlayPause;
     public final Button btnNext;
     public final Button btnShuffle;
+    public final Button btnRepeat;
     public final Slider progressSlider;
     public final Slider volumeSlider;
     public final Label lblCurrentTime;
@@ -26,13 +27,15 @@ public class PlayerBar extends HBox {
         btnPlayPause = new Button("▶");
         btnNext      = new Button("⏭");
         btnShuffle   = new Button("Shuffle");
+        btnRepeat    = new Button("Repeat");
 
         btnPrevious.setStyle("-fx-font-size: 16px; -fx-background-color: transparent; -fx-text-fill: white;");
         btnPlayPause.setStyle("-fx-font-size: 20px; -fx-background-color: transparent; -fx-text-fill: white;");
         btnNext.setStyle("-fx-font-size: 16px; -fx-background-color: transparent; -fx-text-fill: white;");
         btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;");
+        btnRepeat.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;");
 
-        HBox controls = new HBox(16, btnPrevious, btnPlayPause, btnNext, btnShuffle);
+        HBox controls = new HBox(16, btnPrevious, btnPlayPause, btnNext, btnShuffle, btnRepeat);
         controls.setAlignment(Pos.CENTER);
 
         lblTrackInfo = new Label("Aucun morceau");
