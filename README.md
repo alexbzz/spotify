@@ -84,18 +84,6 @@ Ou glisse-les directement dans la fenêtre via le **drag & drop**.
 | Ajouter des fichiers | Glisser-déposer dans la liste |
 | Rechercher | Taper dans la barre de recherche |
 
-## Grille d'évaluation
-
-| Critère | Points |
-|---|---|
-| Chargement de la bibliothèque | 3 pts |
-| Interface avec tracklist et Player Bar | 3 pts |
-| Lecture audio fonctionnelle | 4 pts |
-| Barre de progression synchronisée | 3 pts |
-| Contrôles Next / Previous / Volume | 3 pts |
-| Lecture automatique du morceau suivant | 2 pts |
-| Bonus | +2 pts |
-| **Total** | **20 pts** |
 
 ## Auteur
 
