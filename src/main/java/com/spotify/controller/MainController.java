@@ -1,24 +1,28 @@
 package com.spotify.controller;
 
+import com.spotify.model.Playlist;
 import com.spotify.model.Track;
 import com.spotify.service.AudioPlayerService;
 import com.spotify.service.LibraryService;
 import com.spotify.service.PlaybackQueue;
+import com.spotify.service.PlaylistService;
 import com.spotify.ui.MainView;
 import com.spotify.ui.PlayerBar;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+
+import java.util.Optional;
 
 public class MainController {
 
     private final LibraryService libraryService;
     private final AudioPlayerService audioPlayerService;
     private final PlaybackQueue playbackQueue;
+    private final PlaylistService playlistService;
     private final ObservableList<Track> trackList;
-    private FilteredList<Track> filteredList;
+    private final FilteredList<Track> filteredList;
 
     private MainView mainView;
     private boolean isPlaying = false;
@@ -28,7 +32,9 @@ public class MainController {
         this.libraryService = new LibraryService();
         this.audioPlayerService = new AudioPlayerService();
         this.playbackQueue = new PlaybackQueue();
+        this.playlistService = new PlaylistService();
         this.trackList = FXCollections.observableArrayList();
+        this.filteredList = new FilteredList<>(trackList, p -> true);
         loadLibrary();
     }
 
@@ -37,14 +43,18 @@ public class MainController {
         libraryService.loadFromDirectory(musicPath);
         trackList.setAll(libraryService.getTracks());
         playbackQueue.setQueue(libraryService.getTracks());
-        filteredList = new FilteredList<>(trackList, p -> true);
+    }
+
+    private void showAllTracks() {
+        trackList.clear();
+        trackList.addAll(libraryService.getTracks());
+        filteredList.setPredicate(p -> true);
     }
 
     public void bindView(MainView view) {
         this.mainView = view;
         PlayerBar bar = view.getPlayerBar();
 
-        // --- Barre de progression ---
         audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) ->
                 bar.progressSlider.setMax(newVal.doubleValue())
         );
@@ -60,15 +70,11 @@ public class MainController {
                 bar.lblTotalTime.setText(formatTime(newVal.doubleValue()))
         );
 
-        // --- Info morceau ---
         bar.lblTrackInfo.textProperty().bind(audioPlayerService.trackInfoProperty);
-
-        // --- Boutons ---
         bar.btnPlayPause.setOnAction(e -> togglePlayPause());
         bar.btnNext.setOnAction(e -> playNext());
         bar.btnPrevious.setOnAction(e -> playPrevious());
 
-        // --- Shuffle : flash vert 1 seconde puis retour gris ---
         bar.btnShuffle.setOnAction(e -> {
             playbackQueue.shuffle();
             bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
@@ -82,7 +88,6 @@ public class MainController {
             }, 1000);
         });
 
-        // --- Repeat : toggle vert/gris ---
         bar.btnRepeat.setOnAction(e -> {
             isRepeat = !isRepeat;
             if (isRepeat) {
@@ -92,17 +97,14 @@ public class MainController {
             }
         });
 
-        // --- Volume ---
         bar.volumeSlider.valueProperty().addListener((obs, oldVal, newVal) ->
                 audioPlayerService.setVolume(newVal.doubleValue())
         );
 
-        // --- Seek ---
         bar.progressSlider.setOnMouseReleased(e ->
                 audioPlayerService.seekTo(bar.progressSlider.getValue())
         );
 
-        // --- Double clic sur un morceau ---
         ListView<Track> listView = view.getTrackListView();
         listView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
@@ -115,10 +117,32 @@ public class MainController {
             }
         });
 
-        // --- Fin de morceau ---
+        ContextMenu trackContextMenu = new ContextMenu();
+        Menu addToPlaylistMenu = new Menu("Ajouter a une playlist");
+        trackContextMenu.getItems().add(addToPlaylistMenu);
+        listView.setContextMenu(trackContextMenu);
+
+        trackContextMenu.setOnShowing(e -> {
+            addToPlaylistMenu.getItems().clear();
+            for (Playlist p : playlistService.getPlaylists()) {
+                MenuItem item = new MenuItem(p.getName());
+                item.setOnAction(ev -> {
+                    Track selected = listView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        playlistService.addTrackToPlaylist(p, selected);
+                    }
+                });
+                addToPlaylistMenu.getItems().add(item);
+            }
+            if (addToPlaylistMenu.getItems().isEmpty()) {
+                MenuItem none = new MenuItem("Aucune playlist");
+                none.setDisable(true);
+                addToPlaylistMenu.getItems().add(none);
+            }
+        });
+
         audioPlayerService.setOnEndOfMedia(this::playNext);
 
-        // --- Recherche ---
         TextField searchField = view.getSearchField();
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredList.setPredicate(track -> {
@@ -127,6 +151,61 @@ public class MainController {
                 return track.getTitle().toLowerCase().contains(query)
                         || track.getArtist().toLowerCase().contains(query);
             });
+        });
+
+        view.btnNewPlaylist.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Nouvelle playlist");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Nom de la playlist :");
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(name -> {
+                if (!name.isBlank()) playlistService.createPlaylist(name);
+            });
+        });
+
+        ListView<Playlist> playlistListView = view.getPlaylistView();
+
+        ContextMenu playlistContextMenu = new ContextMenu();
+        MenuItem renameItem = new MenuItem("Renommer");
+        MenuItem deleteItem = new MenuItem("Supprimer");
+        playlistContextMenu.getItems().addAll(renameItem, deleteItem);
+        playlistListView.setContextMenu(playlistContextMenu);
+
+        renameItem.setOnAction(e -> {
+            Playlist selected = playlistListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                TextInputDialog dialog = new TextInputDialog(selected.getName());
+                dialog.setTitle("Renommer");
+                dialog.setHeaderText(null);
+                dialog.setContentText("Nouveau nom :");
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(name -> {
+                    if (!name.isBlank()) playlistService.renamePlaylist(selected, name);
+                });
+            }
+        });
+
+        deleteItem.setOnAction(e -> {
+            Playlist selected = playlistListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                playlistService.deletePlaylist(selected);
+                showAllTracks();
+            }
+        });
+
+        playlistListView.setOnMouseClicked(e -> {
+            Playlist selected = playlistListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                trackList.clear();
+                trackList.addAll(selected.getTracks());
+                filteredList.setPredicate(p -> true);
+            }
+        });
+
+        view.getBtnAllTracks().setOnAction(e -> {
+            playlistListView.getSelectionModel().clearSelection();
+            showAllTracks();
         });
     }
 
@@ -172,4 +251,5 @@ public class MainController {
 
     public ObservableList<Track> getTrackList() { return trackList; }
     public FilteredList<Track> getFilteredList() { return filteredList; }
+    public ObservableList<Playlist> getPlaylists() { return playlistService.getPlaylists(); }
 }
