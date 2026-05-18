@@ -42,7 +42,7 @@ public class LibraryService {
             System.out.println(" Attention erreur lors du scan : " + e.getMessage());
         }
 
-        System.out.println(":)" + tracks.size() + " morceaux chargés depuis " + directoryPath);
+        System.out.println(" " + tracks.size() + " morceaux chargés depuis " + directoryPath);
         tracks.forEach(System.out::println);
 
         return tracks;
