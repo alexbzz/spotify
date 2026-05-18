@@ -46,4 +46,5 @@ public class MainView {
 
     public BorderPane getRoot() { return root; }
     public ListView<Track> getTrackListView() { return trackListView; }
+    public PlayerBar getPlayerBar() { return playerBar; }
 }

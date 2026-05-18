@@ -13,6 +13,8 @@ public class SpotifyApp extends Application {
         MainController controller = new MainController();
         MainView mainView = new MainView(controller);
 
+        controller.bindView(mainView);
+
         Scene scene = new Scene(mainView.getRoot(), 900, 600);
 
         stage.setTitle("Spotify Clone");
