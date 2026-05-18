@@ -68,11 +68,21 @@ public class MainController {
         bar.btnNext.setOnAction(e -> playNext());
         bar.btnPrevious.setOnAction(e -> playPrevious());
 
+        // --- Shuffle : flash vert 1 seconde puis retour gris ---
         bar.btnShuffle.setOnAction(e -> {
             playbackQueue.shuffle();
             bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
+            new java.util.Timer().schedule(new java.util.TimerTask() {
+                @Override
+                public void run() {
+                    javafx.application.Platform.runLater(() ->
+                            bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;")
+                    );
+                }
+            }, 1000);
         });
 
+        // --- Repeat : toggle vert/gris ---
         bar.btnRepeat.setOnAction(e -> {
             isRepeat = !isRepeat;
             if (isRepeat) {

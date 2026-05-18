@@ -20,41 +20,48 @@ public class MainView {
     public MainView(MainController controller) {
         // --- SIDEBAR ---
         Label sidebarTitle = new Label("Ma Bibliotheque");
-        sidebarTitle.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
+        sidebarTitle.setStyle("-fx-text-fill: #1db954; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         VBox sidebar = new VBox(16, sidebarTitle);
         sidebar.setPadding(new Insets(20));
         sidebar.setPrefWidth(180);
         sidebar.setStyle("-fx-background-color: #000000;");
 
+        // --- BARRE DE RECHERCHE ---
         searchField = new TextField();
         searchField.setPromptText("Rechercher un morceau...");
         searchField.setStyle(
                 "-fx-background-color: #2a2a2a;" +
                         "-fx-text-fill: white;" +
                         "-fx-prompt-text-fill: #aaaaaa;" +
-                        "-fx-border-color: #444444;" +
+                        "-fx-border-color: #1db954;" +
                         "-fx-border-radius: 4;" +
                         "-fx-background-radius: 4;" +
                         "-fx-font-size: 13px;"
         );
         searchField.setPadding(new Insets(8));
 
+        // --- TRACKLIST ---
         Label tracklistTitle = new Label("Tous les morceaux");
-        tracklistTitle.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;");
+        tracklistTitle.setStyle("-fx-text-fill: #1db954; -fx-font-weight: bold; -fx-font-size: 15px;");
 
         trackListView = new ListView<>();
         trackListView.setItems(controller.getFilteredList());
         trackListView.setCellFactory(lv -> new TrackCell());
-        trackListView.setStyle("-fx-background-color: #121212;");
+        trackListView.setStyle(
+                "-fx-background-color: #121212;" +
+                        "-fx-border-color: transparent;"
+        );
 
         VBox centerBox = new VBox(8, tracklistTitle, searchField, trackListView);
         centerBox.setPadding(new Insets(16));
         centerBox.setStyle("-fx-background-color: #121212;");
         VBox.setVgrow(trackListView, Priority.ALWAYS);
 
+        // --- PLAYER BAR ---
         playerBar = new PlayerBar();
 
+        // --- ASSEMBLAGE ---
         root = new BorderPane();
         root.setLeft(sidebar);
         root.setCenter(centerBox);

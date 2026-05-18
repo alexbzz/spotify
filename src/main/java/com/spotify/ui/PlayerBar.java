@@ -29,11 +29,22 @@ public class PlayerBar extends HBox {
         btnShuffle   = new Button("Shuffle");
         btnRepeat    = new Button("Repeat");
 
-        btnPrevious.setStyle("-fx-font-size: 16px; -fx-background-color: transparent; -fx-text-fill: white;");
-        btnPlayPause.setStyle("-fx-font-size: 20px; -fx-background-color: transparent; -fx-text-fill: white;");
-        btnNext.setStyle("-fx-font-size: 16px; -fx-background-color: transparent; -fx-text-fill: white;");
-        btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;");
-        btnRepeat.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;");
+        String btnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16px;";
+        String btnSmallStyle = "-fx-background-color: transparent; -fx-text-fill: #aaaaaa; -fx-font-size: 13px;";
+
+        btnPrevious.setStyle(btnStyle);
+        btnPlayPause.setStyle("-fx-background-color: #1db954; -fx-text-fill: black; -fx-font-size: 16px; -fx-background-radius: 50; -fx-min-width: 40; -fx-min-height: 40;");
+        btnNext.setStyle(btnStyle);
+        btnShuffle.setStyle(btnSmallStyle);
+        btnRepeat.setStyle(btnSmallStyle);
+
+        // Hover sur play/pause
+        btnPlayPause.setOnMouseEntered(e ->
+                btnPlayPause.setStyle("-fx-background-color: #1ed760; -fx-text-fill: black; -fx-font-size: 16px; -fx-background-radius: 50; -fx-min-width: 40; -fx-min-height: 40;")
+        );
+        btnPlayPause.setOnMouseExited(e ->
+                btnPlayPause.setStyle("-fx-background-color: #1db954; -fx-text-fill: black; -fx-font-size: 16px; -fx-background-radius: 50; -fx-min-width: 40; -fx-min-height: 40;")
+        );
 
         HBox controls = new HBox(16, btnPrevious, btnPlayPause, btnNext, btnShuffle, btnRepeat);
         controls.setAlignment(Pos.CENTER);
@@ -56,7 +67,7 @@ public class PlayerBar extends HBox {
         progressBox.setAlignment(Pos.CENTER);
 
         Label lblVolume = new Label("Volume");
-        lblVolume.setStyle("-fx-text-fill: white;");
+        lblVolume.setStyle("-fx-text-fill: #aaaaaa;");
         volumeSlider = new Slider(0, 1, 0.8);
         volumeSlider.setMaxWidth(100);
         volumeSlider.setStyle("-fx-accent: #1db954;");
@@ -72,7 +83,7 @@ public class PlayerBar extends HBox {
         this.setAlignment(Pos.CENTER);
         this.setPadding(new Insets(10, 20, 10, 20));
         this.setSpacing(20);
-        this.setStyle("-fx-background-color: #181818; -fx-border-color: #333333; -fx-border-width: 1 0 0 0;");
+        this.setStyle("-fx-background-color: #000000; -fx-border-color: #1db954; -fx-border-width: 1 0 0 0;");
         this.setPrefHeight(90);
     }
 }
