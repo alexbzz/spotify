@@ -42,9 +42,12 @@ public class MainController {
         audioPlayerService.totalDurationSeconds.addListener((obs, oldVal, newVal) -> {
             bar.progressSlider.setMax(newVal.doubleValue());
         });
+        bar.btnShuffle.setOnAction(e -> {
+            playbackQueue.shuffle();
+            bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #1db954;");
+        });
 
         audioPlayerService.currentTimeSeconds.addListener((obs, oldVal, newVal) -> {
-            // ⚠️ On ne met à jour que si l'utilisateur ne drag pas le slider
             if (!bar.progressSlider.isValueChanging()) {
                 bar.progressSlider.setValue(newVal.doubleValue());
             }
