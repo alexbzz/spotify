@@ -6,6 +6,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.media.AudioSpectrumListener;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
@@ -21,11 +22,10 @@ public class AudioPlayerService {
     public final DoubleProperty totalDurationSeconds = new SimpleDoubleProperty(0);
     public final StringProperty trackInfoProperty = new SimpleStringProperty("Aucun morceau");
 
-    //Appelé a la fin du morceau
     private Runnable onEndOfMedia;
+    private AudioSpectrumListener spectrumListener;
 
     public void play(Track track) {
-        //Arrete l'ancien player
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.dispose();
@@ -38,6 +38,13 @@ public class AudioPlayerService {
         Media media = new Media(uri);
         mediaPlayer = new MediaPlayer(media);
 
+        mediaPlayer.setAudioSpectrumNumBands(64);
+        mediaPlayer.setAudioSpectrumInterval(0.05);
+
+        if (spectrumListener != null) {
+            mediaPlayer.setAudioSpectrumListener(spectrumListener);
+        }
+
         mediaPlayer.setOnReady(() -> {
             double duration = mediaPlayer.getTotalDuration().toSeconds();
             Platform.runLater(() -> {
@@ -46,7 +53,6 @@ public class AudioPlayerService {
             });
             mediaPlayer.play();
         });
-
 
         mediaPlayer.currentTimeProperty().addListener((obs, oldVal, newVal) -> {
             Platform.runLater(() ->
@@ -80,9 +86,7 @@ public class AudioPlayerService {
     }
 
     public void seekTo(double seconds) {
-        if (mediaPlayer != null) {
-            mediaPlayer.seek(Duration.seconds(seconds));
-        }
+        if (mediaPlayer != null) mediaPlayer.seek(Duration.seconds(seconds));
     }
 
     public void setVolume(double volume) {
@@ -94,9 +98,7 @@ public class AudioPlayerService {
                 mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING;
     }
 
-    public void setOnEndOfMedia(Runnable callback) {
-        this.onEndOfMedia = callback;
-    }
-
+    public void setOnEndOfMedia(Runnable callback) { this.onEndOfMedia = callback; }
+    public void setSpectrumListener(AudioSpectrumListener listener) { this.spectrumListener = listener; }
     public Track getCurrentTrack() { return currentTrack; }
 }

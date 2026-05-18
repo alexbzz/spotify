@@ -16,6 +16,7 @@ public class MainView {
     private final ListView<Playlist> playlistView;
     private final PlayerBar playerBar;
     private final Button btnAllTracks;
+    public final SpectrumVisualizer visualizer;
     public final TextField searchField;
     public final Button btnNewPlaylist;
 
@@ -79,11 +80,14 @@ public class MainView {
         VBox.setVgrow(trackListView, Priority.ALWAYS);
 
         playerBar = new PlayerBar();
+        visualizer = new SpectrumVisualizer(900, 60);
+
+        VBox bottomBox = new VBox(visualizer, playerBar);
 
         root = new BorderPane();
         root.setLeft(sidebar);
         root.setCenter(centerBox);
-        root.setBottom(playerBar);
+        root.setBottom(bottomBox);
         root.setStyle("-fx-background-color: #121212;");
     }
 
@@ -93,4 +97,5 @@ public class MainView {
     public PlayerBar getPlayerBar() { return playerBar; }
     public TextField getSearchField() { return searchField; }
     public Button getBtnAllTracks() { return btnAllTracks; }
+    public SpectrumVisualizer getVisualizer() { return visualizer; }
 }

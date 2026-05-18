@@ -8,6 +8,7 @@ import com.spotify.service.PlaybackQueue;
 import com.spotify.service.PlaylistService;
 import com.spotify.ui.MainView;
 import com.spotify.ui.PlayerBar;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -81,7 +82,7 @@ public class MainController {
             new java.util.Timer().schedule(new java.util.TimerTask() {
                 @Override
                 public void run() {
-                    javafx.application.Platform.runLater(() ->
+                    Platform.runLater(() ->
                             bar.btnShuffle.setStyle("-fx-font-size: 13px; -fx-background-color: transparent; -fx-text-fill: #aaaaaa;")
                     );
                 }
@@ -142,6 +143,10 @@ public class MainController {
         });
 
         audioPlayerService.setOnEndOfMedia(this::playNext);
+
+        audioPlayerService.setSpectrumListener((timestamp, duration, magnitudes, phases) ->
+                Platform.runLater(() -> view.getVisualizer().updateMagnitudes(magnitudes))
+        );
 
         TextField searchField = view.getSearchField();
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
